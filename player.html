@@ -1,0 +1,1650 @@
+<!-- player.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XI Audio Player</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --background-color: #1a1a2e;
+            --card-bg: #16213e;
+            --text-color: #ecf0f1;
+            --border-color: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--background-color), #0f3460);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .subtitle {
+            color: #bdc3c7;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        /* Player Controls */
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .now-playing {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .thumbnail {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 5px;
+        }
+        
+        .track-info {
+            flex: 1;
+        }
+        
+        .track-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .track-artist, .track-album {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+            margin-bottom: 3px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: #bdc3c7;
+        }
+        
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .btn {
+            background: var(--secondary-color);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+        }
+        
+        .btn:hover {
+            background: var(--primary-color);
+            transform: scale(1.05);
+        }
+        
+        .btn-play {
+            background: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .btn-play:hover {
+            background: #2980b9;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .volume-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 5px;
+            background: var(--border-color);
+            border-radius: 5px;
+            outline: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .speed-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .speed-btn {
+            padding: 5px 10px;
+            background: var(--secondary-color);
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .speed-btn.active {
+            background: var(--primary-color);
+        }
+        
+        /* Playlist */
+        .playlist {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .playlist-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+        
+        .playlist-item.active {
+            background: rgba(52, 152, 219, 0.2);
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .playlist-item-index {
+            width: 30px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #bdc3c7;
+        }
+        
+        .playlist-item-info {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .playlist-item-title {
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .playlist-item-details {
+            font-size: 0.8rem;
+            color: #bdc3c7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .playlist-item-duration {
+            padding: 0 10px;
+            font-size: 0.8rem;
+            color: #bdc3c7;
+        }
+        
+        /* File Management */
+        .file-management {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-field {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+        }
+        
+        .action-btn {
+            padding: 10px 15px;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: #2980b9;
+        }
+        
+        .secondary-btn {
+            background: var(--secondary-color);
+        }
+        
+        .secondary-btn:hover {
+            background: #34495e;
+        }
+        
+        /* Shortcuts Help */
+        .shortcuts-help {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        .shortcut-key {
+            display: inline-block;
+            padding: 2px 6px;
+            background: var(--secondary-color);
+            border-radius: 3px;
+            margin: 0 3px;
+            font-family: monospace;
+        }
+        
+        /* Loading and Status */
+        .status-message {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .status-success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+        
+        .status-error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        .status-info {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Auth styles */
+        .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .auth-form {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .auth-form h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .auth-switch {
+            text-align: center;
+            color: #bdc3c7;
+            cursor: pointer;
+        }
+        
+        .auth-switch:hover {
+            color: var(--primary-color);
+        }
+        
+        .user-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        
+        .user-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 5px;
+            padding: 10px;
+            min-width: 150px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+        
+        .user-dropdown.show {
+            display: block;
+        }
+        
+        .user-dropdown-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .user-dropdown-item:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+        
+        .friends-panel {
+            margin-top: 20px;
+        }
+        
+        .friend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .friend-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .friend-btn {
+            padding: 3px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .btn-accept {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-reject {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-share {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .modal-title {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth container -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-form">
+            <h2 id="authTitle">Login</h2>
+            <div id="loginForm">
+                <input type="text" id="loginUsername" class="auth-input" placeholder="Username" required>
+                <input type="password" id="loginPassword" class="auth-input" placeholder="Password" required>
+                <button id="loginBtn" class="auth-btn">Login</button>
+                <div class="auth-switch" id="showRegister">Don't have an account? Register</div>
+            </div>
+            
+            <div id="registerForm" class="hidden">
+                <input type="text" id="registerUsername" class="auth-input" placeholder="Username" required>
+                <input type="email" id="registerEmail" class="auth-input" placeholder="Email" required>
+                <input type="password" id="registerPassword" class="auth-input" placeholder="Password" required>
+                <button id="registerBtn" class="auth-btn">Register</button>
+                <div class="auth-switch" id="showLogin">Already have an account? Login</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainContent" class="hidden">
+        <div class="user-menu">
+            <button class="user-btn" id="userMenuBtn">
+                <span id="usernameDisplay">User</span> ▼
+            </button>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="user-dropdown-item" id="friendsBtn">Friends</div>
+                <div class="user-dropdown-item" id="logoutBtn">Logout</div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <header>
+                <h1>XI Audio Player</h1>
+                <p class="subtitle">A modern web-based audio player with advanced features</p>
+            </header>
+            
+            <div class="sidebar">
+                <div class="card">
+                    <h2 class="card-title">File Management</h2>
+                    <div class="file-management">
+                        <div class="input-group">
+                            <input type="text" id="directoryPath" class="input-field" placeholder="Path to music directory">
+                            <button id="loadDirectoryBtn" class="action-btn">Load</button>
+                        </div>
+                        
+                        <div class="input-group">
+                            <input type="text" id="downloadUrl" class="input-field" placeholder="URL to download (YouTube or audio)">
+                            <button id="downloadBtn" class="action-btn">Download</button>
+                        </div>
+                        
+                        <div>
+                            <input type="file" id="fileUpload" accept=".mp3,.wav,.m4a,.flac,.ogg,.aac" multiple style="display: none;">
+                            <button id="uploadBtn" class="action-btn secondary-btn" style="width: 100%;">Upload Audio Files</button>
+                        </div>
+                        
+                        <button id="shuffleBtn" class="action-btn secondary-btn" style="width: 100%;">Shuffle Playlist</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title">Keyboard Shortcuts</h2>
+                    <div class="shortcuts-help">
+                        <p><span class="shortcut-key">Space</span> Play/Pause</p>
+                        <p><span class="shortcut-key">→</span> Next track</p>
+                        <p><span class="shortcut-key">←</span> Previous track</p>
+                        <p><span class="shortcut-key">F5</span> Volume Up</p>
+                        <p><span class="shortcut-key">F6</span> Volume Down</p>
+                        <p><span class="shortcut-key">F7</span> Toggle Play/Pause</p>
+                        <p><span class="shortcut-key">Right Win</span> Show Shortcuts</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="card">
+                    <h2 class="card-title">Now Playing</h2>
+                    <div class="player-controls">
+                        <div class="now-playing">
+                            <div class="thumbnail" id="currentThumbnail">
+                                No Image
+                            </div>
+                            <div class="track-info">
+                                <div class="track-title" id="currentTitle">No track selected</div>
+                                <div class="track-artist" id="currentArtist">-</div>
+                                <div class="track-album" id="currentAlbum">-</div>
+                                <div class="track-details" id="currentDetails">-</div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-container" id="progressContainer">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="time-display">
+                            <span id="currentTime">0:00</span>
+                            <span id="totalTime">0:00</span>
+                        </div>
+                        
+                        <div class="control-buttons">
+                            <button class="btn" id="prevBtn">⏮</button>
+                            <button class="btn btn-play" id="playPauseBtn">▶</button>
+                            <button class="btn" id="nextBtn">⏭</button>
+                        </div>
+                        
+                        <div class="volume-control">
+                            <span>🔈</span>
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+                            <span>🔊</span>
+                            <span id="volumeValue">80%</span>
+                        </div>
+                        
+                        <div class="speed-control">
+                            <span>Speed:</span>
+                            <div class="speed-buttons">
+                                <button class="speed-btn" data-speed="0.5">0.5x</button>
+                                <button class="speed-btn" data-speed="0.6">0.6x</button>
+                                <button class="speed-btn" data-speed="0.75">0.75x</button>
+                                <button class="speed-btn" data-speed="0.8">0.8x</button>
+                                <button class="speed-btn" data-speed="0.9">0.9x</button>
+                                <button class="speed-btn active" data-speed="1">1x</button>
+                                <button class="speed-btn" data-speed="1.25">1.25x</button>
+                                <button class="speed-btn" data-speed="1.5">1.5x</button>
+                                <button class="speed-btn" data-speed="2">2x</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title">Playlist</h2>
+                    <div class="playlist" id="playlistContainer">
+                        <div class="playlist-item">
+                            <div class="playlist-item-index">-</div>
+                            <div class="playlist-item-info">
+                                <div class="playlist-item-title">Your playlist is empty</div>
+                                <div class="playlist-item-details">Load a directory or add files to begin</div>
+                            </div>
+                            <div class="playlist-item-duration">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Friends Modal -->
+        <div id="friendsModal" class="modal hidden">
+            <div class="modal-content">
+                <h3 class="modal-title">Friends</h3>
+                
+                <h4>Add Friend</h4>
+                <div class="input-group">
+                    <input type="text" id="friendUsername" class="input-field" placeholder="Friend's username">
+                    <button id="addFriendBtn" class="action-btn">Add</button>
+                </div>
+                
+                <div class="friends-panel">
+                    <h4>Friend Requests</h4>
+                    <div id="friendRequests"></div>
+                    
+                    <h4>Your Friends</h4>
+                    <div id="friendsList"></div>
+                    
+                    <h4>Shared Playlists</h4>
+                    <div id="sharedPlaylists"></div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button id="closeFriendsBtn" class="action-btn secondary-btn">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Share Playlist Modal -->
+        <div id="shareModal" class="modal hidden">
+            <div class="modal-content">
+                <h3 class="modal-title">Share Playlist</h3>
+                <select id="shareFriendSelect" class="modal-input">
+                    <option value="">Select a friend</option>
+                </select>
+                <div class="modal-buttons">
+                    <button id="confirmShareBtn" class="action-btn">Share</button>
+                    <button id="cancelShareBtn" class="action-btn secondary-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let currentUser = null;
+    let audio = new Audio();
+    let currentTrackIndex = -1;
+    let playlist = [];
+    let isPlaying = false;
+    let updateInterval;
+    
+    // Define these variables at the top level so they're accessible everywhere
+    let volumeSlider, volumeValue, progressBar, currentTimeEl, totalTimeEl;
+    let playPauseBtn, prevBtn, nextBtn;
+    let loadDirectoryBtn, directoryPath, downloadBtn, downloadUrl, uploadBtn, fileUpload, shuffleBtn;
+    let speedButtons;
+    
+    // Authentication functions
+    function showAuth() {
+        document.getElementById('authContainer').classList.remove('hidden');
+        document.getElementById('mainContent').classList.add('hidden');
+    }
+    
+    function hideAuth() {
+        document.getElementById('authContainer').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+    }
+    
+    function showLogin() {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('authTitle').textContent = 'Login';
+    }
+    
+    function showRegister() {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+        document.getElementById('authTitle').textContent = 'Register';
+    }
+    
+    async function login() {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!username || !password) {
+            showMessage('Please enter username and password', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(username + ':' + password),
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                currentUser = data.username;
+                document.getElementById('usernameDisplay').textContent = currentUser;
+                hideAuth();
+                loadPlaylist();
+                loadPlayerStatus();
+                showMessage('Login successful', 'success');
+            } else {
+                throw new Error('Login failed');
+            }
+        } catch (error) {
+            showMessage('Invalid credentials', 'error');
+        }
+    }
+    
+    async function register() {
+        const username = document.getElementById('registerUsername').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        
+        if (!username || !email || !password) {
+            showMessage('Please fill all fields', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email, password })
+            });
+            
+            if (response.ok) {
+                showMessage('Registration successful. Please login.', 'success');
+                showLogin();
+            } else {
+                const error = await response.json();
+                throw new Error(error.detail || 'Registration failed');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+    
+    async function logout() {
+        try {
+            await fetch('/api/logout', { method: 'POST' });
+            currentUser = null;
+            showAuth();
+            showMessage('Logged out successfully', 'success');
+        } catch (error) {
+            showMessage('Logout error', 'error');
+        }
+    }
+    
+    // Friends functionality
+    async function loadFriends() {
+        try {
+            const response = await fetch('/api/friends');
+            const data = await response.json();
+            
+            // Display friend requests
+            const requestsContainer = document.getElementById('friendRequests');
+            requestsContainer.innerHTML = '';
+            
+            if (data.friend_requests.length === 0) {
+                requestsContainer.innerHTML = '<p>No pending requests</p>';
+            } else {
+                data.friend_requests.forEach(friend => {
+                    const requestEl = document.createElement('div');
+                    requestEl.className = 'friend-item';
+                    requestEl.innerHTML = `
+                        <span>${friend}</span>
+                        <div class="friend-actions">
+                            <button class="friend-btn btn-accept" onclick="acceptFriendRequest('${friend}')">Accept</button>
+                            <button class="friend-btn btn-reject" onclick="rejectFriendRequest('${friend}')">Reject</button>
+                        </div>
+                    `;
+                    requestsContainer.appendChild(requestEl);
+                });
+            }
+            
+            // Display friends list
+            const friendsContainer = document.getElementById('friendsList');
+            friendsContainer.innerHTML = '';
+            
+            if (data.friends.length === 0) {
+                friendsContainer.innerHTML = '<p>No friends yet</p>';
+            } else {
+                data.friends.forEach(friend => {
+                    const friendEl = document.createElement('div');
+                    friendEl.className = 'friend-item';
+                    friendEl.innerHTML = `
+                        <span>${friend}</span>
+                        <div class="friend-actions">
+                            <button class="friend-btn btn-share" onclick="sharePlaylistWith('${friend}')">Share Playlist</button>
+                        </div>
+                    `;
+                    friendsContainer.appendChild(friendEl);
+                });
+                
+                // Populate share dropdown
+                const shareSelect = document.getElementById('shareFriendSelect');
+                shareSelect.innerHTML = '<option value="">Select a friend</option>';
+                data.friends.forEach(friend => {
+                    const option = document.createElement('option');
+                    option.value = friend;
+                    option.textContent = friend;
+                    shareSelect.appendChild(option);
+                });
+            }
+            
+            // Load shared playlists
+            await loadSharedPlaylists();
+        } catch (error) {
+            showMessage('Error loading friends', 'error');
+        }
+    }
+    
+    async function addFriend() {
+        const friendUsername = document.getElementById('friendUsername').value;
+        
+        if (!friendUsername) {
+            showMessage('Please enter a username', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/friends/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ friend_username: friendUsername })
+            });
+            
+            if (response.ok) {
+                showMessage('Friend request sent', 'success');
+                document.getElementById('friendUsername').value = '';
+                loadFriends();
+            } else {
+                throw new Error('Failed to send friend request');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+    
+    async function acceptFriendRequest(friendUsername) {
+        try {
+            const response = await fetch(`/api/friends/accept/${friendUsername}`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                showMessage('Friend request accepted', 'success');
+                loadFriends();
+            } else {
+                throw new Error('Failed to accept friend request');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+    
+    async function rejectFriendRequest(friendUsername) {
+        try {
+            const response = await fetch(`/api/friends/reject/${friendUsername}`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                showMessage('Friend request rejected', 'success');
+                loadFriends();
+            } else {
+                throw new Error('Failed to reject friend request');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+    
+    async function loadSharedPlaylists() {
+        try {
+            const response = await fetch('/api/playlist/shared');
+            const sharedPlaylists = await response.json();
+            
+            const container = document.getElementById('sharedPlaylists');
+            container.innerHTML = '';
+            
+            if (Object.keys(sharedPlaylists).length === 0) {
+                container.innerHTML = '<p>No shared playlists</p>';
+            } else {
+                for (const [friend, playlist] of Object.entries(sharedPlaylists)) {
+                    const playlistEl = document.createElement('div');
+                    playlistEl.className = 'friend-item';
+                    playlistEl.innerHTML = `
+                        <span>From ${friend} (${playlist.tracks.length} tracks)</span>
+                        <div class="friend-actions">
+                            <button class="friend-btn btn-accept" onclick="loadSharedPlaylist('${friend}')">Load</button>
+                        </div>
+                    `;
+                    container.appendChild(playlistEl);
+                }
+            }
+        } catch (error) {
+            showMessage('Error loading shared playlists', 'error');
+        }
+    }
+    
+    async function loadSharedPlaylist(friendUsername) {
+        try {
+            const response = await fetch(`/api/playlist/load_shared/${friendUsername}`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                showMessage(`Loaded playlist from ${friendUsername}`, 'success');
+                closeFriendsModal();
+                loadPlaylist();
+            } else {
+                throw new Error('Failed to load shared playlist');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+    
+    async function sharePlaylist() {
+        const friendSelect = document.getElementById('shareFriendSelect');
+        const friendUsername = friendSelect.value;
+        
+        if (!friendUsername) {
+            showMessage('Please select a friend', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/playlist/share', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ friend_username: friendUsername })
+            });
+            
+            if (response.ok) {
+                showMessage('Playlist shared successfully', 'success');
+                closeShareModal();
+                loadFriends();
+            } else {
+                throw new Error('Failed to share playlist');
+            }
+        } catch (error) {
+            showMessage(error.message, 'error');
+        }
+    }
+    
+    function openFriendsModal() {
+        document.getElementById('friendsModal').classList.remove('hidden');
+        loadFriends();
+    }
+    
+    function closeFriendsModal() {
+        document.getElementById('friendsModal').classList.add('hidden');
+    }
+    
+    function openShareModal() {
+        document.getElementById('shareModal').classList.remove('hidden');
+    }
+    
+    function closeShareModal() {
+        document.getElementById('shareModal').classList.add('hidden');
+    }
+    
+    function sharePlaylistWith(friendUsername) {
+        openShareModal();
+        document.getElementById('shareFriendSelect').value = friendUsername;
+    }
+    
+    // Player functions
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    
+    async function loadPlaylist() {
+        try {
+            const response = await fetch('/api/playlist');
+            const data = await response.json();
+            playlist = data.tracks;
+            currentTrackIndex = data.current_index;
+            renderPlaylist();
+            
+            if (currentTrackIndex >= 0) {
+                loadTrack(currentTrackIndex);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+    
+    async function loadPlayerStatus() {
+        try {
+            const response = await fetch('/api/status');
+            const data = await response.json();
+            isPlaying = data.is_playing;
+            updatePlayButton();
+            
+            if (data.current_track) {
+                updateTrackInfo(data.current_track);
+            }
+            
+            volumeSlider.value = data.volume;
+            volumeValue.textContent = `${data.volume}%`;
+            
+            // Update speed buttons
+            const speed = data.speed;
+            speedButtons.forEach(btn => {
+                if (parseFloat(btn.dataset.speed) === speed) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
+    
+    function renderPlaylist() {
+        const playlistContainer = document.getElementById('playlistContainer');
+        playlistContainer.innerHTML = '';
+        
+        if (playlist.length === 0) {
+            playlistContainer.innerHTML = `
+                <div class="playlist-item">
+                    <div class="playlist-item-index">-</div>
+                    <div class="playlist-item-info">
+                        <div class="playlist-item-title">Your playlist is empty</div>
+                        <div class="playlist-item-details">Load a directory or add files to begin</div>
+                    </div>
+                    <div class="playlist-item-duration">-</div>
+                </div>
+            `;
+            return;
+        }
+        
+        playlist.forEach((track, index) => {
+            const item = document.createElement('div');
+            item.className = `playlist-item ${index === currentTrackIndex ? 'active' : ''}`;
+            item.innerHTML = `
+                <div class="playlist-item-index">${index + 1}</div>
+                <div class="playlist-item-info">
+                    <div class="playlist-item-title">${track.title}</div>
+                    <div class="playlist-item-details">${track.artist || 'Unknown Artist'} • ${track.album || 'Unknown Album'}</div>
+                </div>
+                <div class="playlist-item-duration">${formatTime(track.duration)}</div>
+            `;
+            
+            item.addEventListener('click', () => {
+                playTrack(index);
+            });
+            
+            playlistContainer.appendChild(item);
+        });
+    }
+    
+    function loadTrack(index) {
+        if (index < 0 || index >= playlist.length) return;
+        
+        currentTrackIndex = index;
+        
+        // Update playlist UI
+        const items = document.querySelectorAll('.playlist-item');
+        items.forEach((item, i) => {
+            if (i === index) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+        
+        // Load track info
+        updateTrackInfo(playlist[index]);
+        
+        // Set audio source
+        audio.src = `/api/stream/${index}`;
+        
+        if (isPlaying) {
+            audio.play().catch(showError);
+        }
+    }
+    
+    function updateTrackInfo(track) {
+        document.getElementById('currentTitle').textContent = track.title;
+        document.getElementById('currentArtist').textContent = track.artist || 'Unknown Artist';
+        document.getElementById('currentAlbum').textContent = track.album || 'Unknown Album';
+        document.getElementById('currentDetails').textContent = 
+            `${track.format} • ${track.size ? track.size.toFixed(2) + ' MB' : 'Unknown size'}`;
+        
+        totalTimeEl.textContent = formatTime(track.duration);
+        
+        // Load thumbnail
+        const thumbnailEl = document.getElementById('currentThumbnail');
+        thumbnailEl.innerHTML = 'Loading...';
+        thumbnailEl.style.backgroundImage = '';
+        
+        fetch(`/api/thumbnail/${track.index}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('No thumbnail available');
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                thumbnailEl.style.backgroundImage = `url(${url})`;
+                thumbnailEl.innerHTML = '';
+            })
+            .catch(() => {
+                thumbnailEl.innerHTML = 'No Image';
+                thumbnailEl.style.backgroundImage = '';
+            });
+    }
+    
+    function togglePlayPause() {
+        if (playlist.length === 0) return;
+        
+        if (currentTrackIndex < 0) {
+            playTrack(0);
+            return;
+        }
+        
+        if (isPlaying) {
+            pauseAudio();
+        } else {
+            playAudio();
+        }
+    }
+    
+    function playAudio() {
+        if (currentTrackIndex < 0 && playlist.length > 0) {
+            playTrack(0);
+            return;
+        }
+        
+        fetch('/api/play', { method: 'POST' })
+            .then(() => {
+                isPlaying = true;
+                updatePlayButton();
+                audio.play().catch(showError);
+            })
+            .catch(showError);
+    }
+    
+    function pauseAudio() {
+        fetch('/api/pause', { method: 'POST' })
+            .then(() => {
+                isPlaying = false;
+                updatePlayButton();
+                audio.pause();
+            })
+            .catch(showError);
+    }
+    
+    function playTrack(index) {
+        fetch(`/api/play/${index}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                loadTrack(index);
+                isPlaying = true;
+                updatePlayButton();
+                audio.play().catch(showError);
+            })
+            .catch(showError);
+    }
+    
+    function playPrevious() {
+        fetch('/api/previous', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                loadPlaylist(); // Reload to get updated current index
+            })
+            .catch(showError);
+    }
+    
+    function playNext() {
+        fetch('/api/next', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                loadPlaylist(); // Reload to get updated current index
+            })
+            .catch(showError);
+    }
+    
+    function updateVolume() {
+        const volume = volumeSlider.value;
+        volumeValue.textContent = `${volume}%`;
+        audio.volume = volume / 100;
+        
+        // Send volume to server
+        const formData = new FormData();
+        formData.append('volume', volume);
+        
+        fetch('/api/volume', {
+            method: 'POST',
+            body: formData
+        }).catch(showError);
+    }
+    
+    function changeSpeed(speed) {
+        const formData = new FormData();
+        formData.append('speed', speed);
+        
+        fetch('/api/speed', {
+            method: 'POST',
+            body: formData
+        })
+        .then(() => {
+            // Reload the current track to apply speed change
+            if (currentTrackIndex >= 0) {
+                loadTrack(currentTrackIndex);
+            }
+        })
+        .catch(showError);
+    }
+    
+    function updateProgress() {
+        if (audio.duration) {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = `${percent}%`;
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            
+            // Update server with current position
+            if (isPlaying) {
+                const formData = new FormData();
+                formData.append('position', Math.floor(audio.currentTime * 1000));
+                
+                fetch('/api/seek', {
+                    method: 'POST',
+                    body: formData
+                }).catch(showError);
+            }
+        }
+    }
+    
+    function seekAudio(e) {
+        if (!audio.duration) return;
+        
+        const width = this.clientWidth;
+        const clickX = e.offsetX;
+        const duration = audio.duration;
+        
+        audio.currentTime = (clickX / width) * duration;
+        
+        // Update server with new position
+        const formData = new FormData();
+        formData.append('position', Math.floor(audio.currentTime * 1000));
+        
+        fetch('/api/seek', {
+            method: 'POST',
+            body: formData
+        }).catch(showError);
+    }
+    
+    function updatePlayButton() {
+        playPauseBtn.textContent = isPlaying ? '⏸' : '▶';
+    }
+    
+    function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
+        
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    function loadDirectory() {
+        const path = directoryPath.value.trim();
+        if (!path) return;
+        
+        const formData = new FormData();
+        formData.append('directory', path);
+        
+        fetch('/api/playlist/load', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            showMessage(`Loaded ${data.count} tracks`, 'success');
+            loadPlaylist();
+            directoryPath.value = '';
+        })
+        .catch(showError);
+    }
+    
+    function downloadFromUrl() {
+        const url = downloadUrl.value.trim();
+        if (!url) return;
+        
+        const formData = new FormData();
+        formData.append('url', url);
+        
+        fetch('/api/download', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            showMessage('Download completed', 'success');
+            loadPlaylist();
+            downloadUrl.value = '';
+        })
+        .catch(showError);
+    }
+    
+    function uploadFile() {
+        if (!fileUpload.files.length) return;
+        
+        const formData = new FormData();
+        for (let i = 0; i < fileUpload.files.length; i++) {
+            formData.append('files', fileUpload.files[i]);
+        }
+        
+        fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            showMessage(`Uploaded ${data.uploaded_files.length} files successfully`, 'success');
+            loadPlaylist();
+            fileUpload.value = '';
+        })
+        .catch(showError);
+    }
+    
+    function shufflePlaylist() {
+        fetch('/api/playlist/shuffle', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                showMessage('Playlist shuffled', 'success');
+                loadPlaylist();
+            })
+            .catch(showError);
+    }
+    
+    function handleKeyPress(e) {
+        // Prevent default behavior for function keys
+        if (e.key === 'F5' || e.key === 'F6' || e.key === 'F7') {
+            e.preventDefault();
+        }
+        
+        switch(e.key) {
+            case ' ':
+                togglePlayPause();
+                break;
+            case 'ArrowRight':
+                playNext();
+                break;
+            case 'ArrowLeft':
+                playPrevious();
+                break;
+            case 'F5': // Volume up
+                volumeSlider.value = Math.min(100, parseInt(volumeSlider.value) + 10);
+                updateVolume();
+                break;
+            case 'F6': // Volume down
+                volumeSlider.value = Math.max(0, parseInt(volumeSlider.value) - 10);
+                updateVolume();
+                break;
+            case 'F7': // Toggle play/pause
+                togglePlayPause();
+                break;
+            case 'ContextMenu': // Right Windows key
+                alert('Keyboard Shortcuts:\n\nSpace - Play/Pause\n→ - Next track\n← - Previous track\nF5 - Volume Up\nF6 - Volume Down\nF7 - Toggle Play/Pause');
+                break;
+        }
+    }
+    
+    function showMessage(message, type) {
+        // Create message element
+        const messageEl = document.createElement('div');
+        messageEl.className = `status-message status-${type}`;
+        messageEl.textContent = message;
+        
+        // Add to top of page
+        document.body.prepend(messageEl);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            messageEl.remove();
+        }, 3000);
+    }
+    
+    function showError(error) {
+        console.error('Error:', error);
+        showMessage(error.message || 'An error occurred', 'error');
+    }
+    
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/user/profile');
+            if (response.ok) {
+                const data = await response.json();
+                currentUser = data.username;
+                document.getElementById('usernameDisplay').textContent = currentUser;
+                hideAuth();
+                loadPlaylist();
+                loadPlayerStatus();
+            } else {
+                showAuth();
+            }
+        } catch (error) {
+            showAuth();
+        }
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Authentication events
+        document.getElementById('showRegister').addEventListener('click', showRegister);
+        document.getElementById('showLogin').addEventListener('click', showLogin);
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('registerBtn').addEventListener('click', register);
+        
+        // User menu events
+        document.getElementById('userMenuBtn').addEventListener('click', function() {
+            document.getElementById('userDropdown').classList.toggle('show');
+        });
+        
+        document.getElementById('friendsBtn').addEventListener('click', function() {
+            document.getElementById('userDropdown').classList.remove('show');
+            openFriendsModal();
+        });
+        
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            document.getElementById('userDropdown').classList.remove('show');
+            logout();
+        });
+        
+        // Friends modal events
+        document.getElementById('addFriendBtn').addEventListener('click', addFriend);
+        document.getElementById('closeFriendsBtn').addEventListener('click', closeFriendsModal);
+        
+        // Share modal events
+        document.getElementById('confirmShareBtn').addEventListener('click', sharePlaylist);
+        document.getElementById('cancelShareBtn').addEventListener('click', closeShareModal);
+        
+        // Player elements - ASSIGN THESE VARIABLES
+        playPauseBtn = document.getElementById('playPauseBtn');
+        prevBtn = document.getElementById('prevBtn');
+        nextBtn = document.getElementById('nextBtn');
+        volumeSlider = document.getElementById('volumeSlider');
+        volumeValue = document.getElementById('volumeValue');
+        progressBar = document.getElementById('progressBar');
+        currentTimeEl = document.getElementById('currentTime');
+        totalTimeEl = document.getElementById('totalTime');
+        loadDirectoryBtn = document.getElementById('loadDirectoryBtn');
+        directoryPath = document.getElementById('directoryPath');
+        downloadBtn = document.getElementById('downloadBtn');
+        downloadUrl = document.getElementById('downloadUrl');
+        uploadBtn = document.getElementById('uploadBtn');
+        fileUpload = document.getElementById('fileUpload');
+        shuffleBtn = document.getElementById('shuffleBtn');
+        speedButtons = document.querySelectorAll('.speed-btn');
+        
+        // Player event listeners
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        prevBtn.addEventListener('click', playPrevious);
+        nextBtn.addEventListener('click', playNext);
+        volumeSlider.addEventListener('input', updateVolume);
+        progressBar.parentElement.addEventListener('click', seekAudio);
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('ended', playNext);
+        loadDirectoryBtn.addEventListener('click', loadDirectory);
+        downloadBtn.addEventListener('click', downloadFromUrl);
+        uploadBtn.addEventListener('click', () => fileUpload.click());
+        fileUpload.addEventListener('change', uploadFile);
+        shuffleBtn.addEventListener('click', shufflePlaylist);
+        
+        speedButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const speed = parseFloat(btn.dataset.speed);
+                changeSpeed(speed);
+                
+                // Update active state
+                speedButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', handleKeyPress);
+        
+        // Initialize volume
+        updateVolume();
+        
+        // Check if user is logged in
+        checkAuthStatus();
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.user-menu')) {
+            document.getElementById('userDropdown').classList.remove('show');
+        }
+        
+        if (event.target.classList.contains('modal')) {
+            document.getElementById('friendsModal').classList.add('hidden');
+            document.getElementById('shareModal').classList.add('hidden');
+        }
+    });
+</script>
+</body>
+</html>
